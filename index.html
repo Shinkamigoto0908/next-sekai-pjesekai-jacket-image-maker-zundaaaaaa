@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Next Sekai UI|ジャケット作成</title>
+<style>
+html, body {
+  margin:0; padding:0; width:100vw; height:100vh;
+  background:#fff; font-family:sans-serif; color:#444466; overflow:hidden;
+}
+
+/* 親コンテナ */
+#parentContainer {
+  position:absolute;
+  width:1920px; height:1080px;
+  left:50%; top:50%;
+  transform-origin:50% 50%;
+  background:#e9ebef;
+}
+
+/* 上部バー */
+#topBar {
+  position:absolute;
+  left:0; top:0; width:100%; height:95.9px;
+  background:#bcbcd1;
+  display:flex; align-items:center; padding-left:40px;
+  font-weight:bold; font-size:48px; color:#444466;
+  box-sizing:border-box;
+}
+
+/* 設定画面 */
+#settings {
+  position:absolute; left:0; top:0; width:100%; height:100%;
+  display:flex; flex-direction:column; align-items:flex-start;
+  padding:150px 40px 20px 40px;
+  gap:30px; box-sizing:border-box; overflow-y:auto;
+}
+#settings h2 { font-size:36px; }
+#settings label { font-size:32px; }
+#settings input, #settings select, #settings button {
+  font-size:28px; padding:8px; width:400px; max-width:100%;
+  box-sizing:border-box; color:#444466;
+}
+
+/* プレビュー画面 */
+#preview { position:absolute; left:0; top:0; width:100%; height:100%; display:none; background:#61617f; }
+#backButton { position:absolute; left:50px; top:50px; font-size:28px; padding:10px; }
+#downloadInfo { position:absolute; left:200px; top:60px; font-size:24px; color:#ffffff; }
+</style>
+</head>
+<body>
+
+<div id="parentContainer">
+
+  <div id="topBar">詳細設定 | Next Sekai UI</div>
+
+  <!-- 設定画面 -->
+  <div id="settings">
+    <h2>設定</h2>
+    
+    <label>ジャケット画像</label>
+    <input type="file" id="imageInput" accept="image/*">
+
+    <label>難易度</label>
+    <select id="levelSelect">
+      <option value="master">Master</option>
+      <option value="append">Append</option>
+    </select>
+
+    <label>タイトル</label>
+    <input type="text" id="titleInput" placeholder="曲のタイトルを入力">
+
+    <label>作曲者</label>
+    <input type="text" id="composerInput" placeholder="作曲者を入力">
+
+    <button onclick="showPreview()">プレビュー再生</button>
+  </div>
+
+  <!-- プレビュー画面 -->
+  <div id="preview">
+    <canvas id="previewCanvas" width="1920" height="1080" style="display:block; width:100%; height:100%;"></canvas>
+    <button id="backButton" onclick="backToSettings()">設定に戻る</button>
+    <span id="downloadInfo">右クリックでダウンロードしてください</span>
+  </div>
+
+</div>
+
+<script>
+const imageInput = document.getElementById("imageInput");
+const levelSelect = document.getElementById("levelSelect");
+const titleInput = document.getElementById("titleInput");
+const composerInput = document.getElementById("composerInput");
+const settings = document.getElementById("settings");
+const preview = document.getElementById("preview");
+const canvas = document.getElementById("previewCanvas");
+const ctx = canvas.getContext("2d");
+
+let jacketImg = new Image();
+let difficultyImg = new Image();
+
+// ジャケット画像読み込み
+imageInput.addEventListener("change", e => {
+  const file = e.target.files[0];
+  if(file){
+    const reader = new FileReader();
+    reader.onload = ev => jacketImg.src = ev.target.result;
+    reader.readAsDataURL(file);
+  }
+});
+
+// 設定→プレビュー
+function showPreview(){
+  settings.style.visibility="hidden";
+  preview.style.display="block";
+  drawPreview();
+}
+
+// プレビュー→設定
+function backToSettings(){
+  preview.style.display="none";
+  settings.style.visibility="visible";
+}
+
+// プレビュー描画
+function drawPreview(){
+  // 背景
+  ctx.fillStyle = "#61617f";
+  ctx.fillRect(0,0,1920,1080);
+
+  // 難易度画像
+  const level = levelSelect.value;
+  difficultyImg.src = level==="master"?"master.png":"append.png";
+  difficultyImg.onload = () => {
+    ctx.drawImage(difficultyImg, 46.1, 603.1, 429, 429);
+
+    // ジャケット画像
+    if(jacketImg.src){
+      ctx.drawImage(jacketImg, 101.3, 550.8, 429, 429);
+    }
+
+    // タイトル
+    ctx.fillStyle="#ffffff";
+    ctx.font="bold 70px sans-serif";
+    ctx.fillText(titleInput.value||"タイトル未入力", 602.3, 734.6+70);
+
+    // 作曲者
+    ctx.font="40px sans-serif";
+    ctx.fillText(composerInput.value||"作曲者未入力", 602.3, 862.5+40);
+
+    // 難易度文字
+    ctx.font="bold 32px sans-serif";
+    ctx.fillText(level==="master"?"MASTER":"APPEND", 60.2, 984.3+32);
+  }
+}
+
+// 親コンテナアスペクト比自動縮小・中央表示
+function resizeContainer(){
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const baseWidth = 1920, baseHeight = 1080;
+  const aspectRatio = baseWidth/baseHeight;
+  let scale = (vw/vh>aspectRatio) ? vh/baseHeight : vw/baseWidth;
+  document.getElementById('parentContainer').style.transform = `translate(-50%,-50%) scale(${scale})`;
+}
+
+window.addEventListener('resize', resizeContainer);
+window.addEventListener('load', resizeContainer);
+</script>
+
+</body>
+</html>
